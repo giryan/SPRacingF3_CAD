@@ -2,20 +2,22 @@ $fn=80;
 
 boardheight = 5/3;
 boardsize = 35;
-cornerradius=3;
+cornerradius=1.5;
+squareCorner = boardsize-(cornerradius*2);
+mountHole = [(boardsize-5)/2,3];
 connectorColour = [1,0,0,0.7];
+componentHeight = 1.5;
 
-module board(connectors=false)
+module board(numServoConnectors, connectors=false)
 {
     //translate([boardsize/2+3,0,0]) square(3,true);
     translate([-boardsize/2,-boardsize/2])
     {
         translate([0,0,-boardheight/2])
         {
+                
             translate([cornerradius,cornerradius])
             {
-                squareCorner = boardsize-(cornerradius*2);
-                
                 color("DimGrey") difference()
                 {
                     minkowski()
@@ -23,20 +25,27 @@ module board(connectors=false)
                         cylinder(r=cornerradius,h=boardheight/2);
                         cube([squareCorner,squareCorner,boardheight/2]);
                     };
-                    CornerHoles(squareCorner);
+                    CornerHoles(mountHole);
                 }
                 
                 
-                if(connectors)
-                    color(connectorColour) CornerHoles(squareCorner);
             }
         }
-        topComponents(connectors);
-        bottomComponents(connectors);
+        TopComponents(connectors, numServoConnectors);
+        BottomComponents(connectors);
+    }
+    if(connectors)
+    {
+        ServoConnectors(numServoConnectors, false, 3);
+    }
+    if(connectors)
+    {
+        color(connectorColour)
+            CornerHoles(mountHole, true);
     }
 }
 
-module topComponents (connectors)
+module TopComponents (connectors, numServoConnectors, verticalServo)
 {
     translate([0,0,boardheight/2])
     {
@@ -51,13 +60,13 @@ module topComponents (connectors)
         color("Silver")
         {
             translate([10.7,7.3,0])
-                cube([14.6,21,1]);
+                cube([14.6,21,componentHeight]);
             translate([7.3,13.4,0])
-                cube([3.4, 8.9 ,1]);
+                cube([3.4, 8.9 ,componentHeight]);
         }
     }
 }
-module bottomComponents (connectors)
+module BottomComponents (connectors)
 {
     translate([0,0,-boardheight/2])
     mirror([0,0,-1])
@@ -70,28 +79,69 @@ module bottomComponents (connectors)
         color("Silver")
         {
             translate([9.3,4.5,0])
-                cube([17, boardsize-9 ,1]);
+                cube([17, boardsize-9 ,componentHeight]);
             translate([13.8,0,0])
             {
-                cube([5.4, 4.5 ,1]);
+                cube([5.4, 4.5 ,componentHeight]);
                 translate([0,boardsize-4.5,0])
-                    cube([5.4, 4.5 ,1]);
+                    cube([5.4, 4.5 ,componentHeight]);
             }
         }
     }
 }
-module CornerHoles(squareCorner)
+
+module ServoConnectors(numPins, vertical, pinRows)
 {
-    CornerHole(squareCorner,[1,1]);
-    CornerHole(squareCorner,[0,1]);
-    CornerHole(squareCorner,[1,0]);
-    CornerHole(squareCorner,[0,0]);
+    color(connectorColour)
+    {
+        servoConnectorWidth = 8*2.54;
+        servoConnectorDepth = 0.4+3*2.54;
+
+        pinCube = [10, numPins*2.54, 0.4+pinRows*2.54];
+        if(vertical)
+        {
+            pinCube = [0.4+pinRows*2.54, numPins*2.54, 10];
+        }
+        
+        translate([boardsize/2-servoConnectorDepth,-servoConnectorWidth/2,0])
+            translate([0,0,boardheight/2])
+                    cube(pinCube);
+    }
 }
 
-module CornerHole(squareCorner,pos)
+module CornerHoles(mountHole_, mountSquares = false)
 {
-    translate([squareCorner*pos[0],squareCorner*pos[1],-boardheight/2]) 
-        cylinder(d=3, h=2*boardheight);
+    mirror([0,0,1]) 
+    {
+        UpHole(mountHole_,[1,1], mountSquares);
+        UpHole(mountHole_,[-1,1], mountSquares);
+        UpHole(mountHole_,[1,-1], mountSquares);
+        UpHole(mountHole_,[-1,-1], mountSquares);
+    }
+    {
+        UpHole(mountHole_,[1,1], mountSquares);
+        UpHole(mountHole_,[-1,1], mountSquares);
+        UpHole(mountHole_,[1,-1], mountSquares);
+        UpHole(mountHole_,[-1,-1], mountSquares);
+    }
+
+}
+
+module UpHole(mountHole_,pos, mountSquares)
+{
+    corners = [mountHole_[0]*pos[0],mountHole_[0]*pos[1]];
+    translate(corners)
+        cylinder(d=mountHole_[1], h=boardheight);
+
+}
+module CornerMount(mountHole_,pos)
+{
+    mountsquaresize = 5;
+    corner = boardsize-mountsquaresize;
+    corners = [corner*pos[0],corner*pos[1]]/2;
+    translate(corners) 
+        translate([-mountsquaresize/2,-mountsquaresize/2,boardheight/2])
+            cube([mountsquaresize,mountsquaresize,mountsquaresize-0.5-boardheight/2]);
 }
 
 module socketAndConnector(socketSize,socketPos,connectorSize, connectors)
@@ -115,7 +165,7 @@ module JSTSH(pins, pos=[0,0,0], connectors)
     {
         socketSize = [2+pins,4.7,3];
         socketPos = [0,0,0];
-        connectorSize = [socketSize[0]+1,2.5,socketSize[2]];
+        connectorSize = [socketSize[0]+1.4,12.5,socketSize[2]];
         
         socketAndConnector(socketSize,socketPos,connectorSize, connectors);
     }
@@ -135,5 +185,3 @@ module MicroUSB(pos=[0,0,0], connectors)
     }
 }
 
-
-board(true);
