@@ -1,10 +1,11 @@
 $fn=80;
 
+
 boardheight = 5/3;
 boardsize = 35;
 cornerradius=1.5;
 squareCorner = boardsize-(cornerradius*2);
-mountHole = [(boardsize-5)/2,3];
+
 connectorColour = [1,0,0,0.7];
 componentHeight = 1.5;
 
@@ -13,24 +14,8 @@ module board(numServoConnectors, connectors=false)
     //translate([boardsize/2+3,0,0]) square(3,true);
     translate([-boardsize/2,-boardsize/2])
     {
-        translate([0,0,-boardheight/2])
-        {
-                
-            translate([cornerradius,cornerradius])
-            {
-                color("DimGrey") difference()
-                {
-                    minkowski()
-                    {
-                        cylinder(r=cornerradius,h=boardheight/2);
-                        cube([squareCorner,squareCorner,boardheight/2]);
-                    };
-                    CornerHoles(mountHole);
-                }
-                
-                
-            }
-        }
+        //color("DimGrey") 
+        BareCircuitBoard();
         TopComponents(connectors, numServoConnectors);
         BottomComponents(connectors);
     }
@@ -41,8 +26,31 @@ module board(numServoConnectors, connectors=false)
     if(connectors)
     {
         color(connectorColour)
-            CornerHoles(mountHole, true);
+            _CornerHoles(mountHole, true);
     }
+}
+
+
+module BareCircuitBoard()
+{
+    difference()
+    {
+        translate([0,0,-boardheight/2])
+        {
+                
+            translate([cornerradius,cornerradius])
+            {
+                minkowski()
+                {
+                    cylinder(r=cornerradius,h=boardheight/2);
+                    cube([squareCorner,squareCorner,boardheight/2]);
+                }
+            }
+        }
+        translate([boardsize/2,boardsize/2])
+        CornerHoles([(boardsize-5)/2,3, boardheight]);
+    }
+    
 }
 
 module TopComponents (connectors, numServoConnectors, verticalServo)
@@ -109,31 +117,21 @@ module ServoConnectors(numPins, vertical, pinRows)
     }
 }
 
-module CornerHoles(mountHole_, mountSquares = false)
+module CornerHoles(mountHole_)
 {
-    mirror([0,0,1]) 
+    translate([0,0,-mountHole_[2]/2])
     {
-        UpHole(mountHole_,[1,1], mountSquares);
-        UpHole(mountHole_,[-1,1], mountSquares);
-        UpHole(mountHole_,[1,-1], mountSquares);
-        UpHole(mountHole_,[-1,-1], mountSquares);
+    translate([mountHole_[0],mountHole_[0]])
+        cylinder(d=mountHole_[1], h=mountHole_[2]);
+    translate([-mountHole_[0],mountHole_[0]])
+        cylinder(d=mountHole_[1], h=mountHole_[2]);
+    translate([mountHole_[0],-mountHole_[0]])
+        cylinder(d=mountHole_[1], h=mountHole_[2]);
+    translate([-mountHole_[0],-mountHole_[0]])
+        cylinder(d=mountHole_[1], h=mountHole_[2]);
     }
-    {
-        UpHole(mountHole_,[1,1], mountSquares);
-        UpHole(mountHole_,[-1,1], mountSquares);
-        UpHole(mountHole_,[1,-1], mountSquares);
-        UpHole(mountHole_,[-1,-1], mountSquares);
-    }
-
 }
 
-module UpHole(mountHole_,pos, mountSquares)
-{
-    corners = [mountHole_[0]*pos[0],mountHole_[0]*pos[1]];
-    translate(corners)
-        cylinder(d=mountHole_[1], h=boardheight);
-
-}
 module CornerMount(mountHole_,pos)
 {
     mountsquaresize = 5;

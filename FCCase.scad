@@ -16,15 +16,57 @@ module SPRacingF3Text()
 
 
 casethickness = 3;
-caseSize = boardsize + 0.25;
+caseSize = boardsize + 0.5;
 caseInterior = [caseSize, caseSize, 8];
 caseExterior = caseInterior+[casethickness,casethickness,casethickness];
 
+
+module BareCase()
+{
+    difference()
+    {
+        cube(caseExterior,true);
+        
+        {    
+            translate([0,0,caseInterior[2]/2+0.5])
+                SPRacingF3Text();
+        cube(caseInterior,true);                     
+            
+        }
+    }
+}
+module CornerMountCubes(top)
+{
+
+    module CornerCube()
+    {
+        cubePos = boardsize/2-2;
+        mountcubeheight = caseInterior[2]/2;
+        translate([cubePos,cubePos,mountcubeheight/2]) cube([ 6,6, mountcubeheight], true);
+    }
+    cubetrans = top ?
+                    boardheight/2 :
+                    (-caseInterior[2]/2) - (boardheight/2)
+                    ;
+    
+    translate([0,0, cubetrans])
+    union()
+    {
+        CornerCube();
+        mirror([1,0,0]) CornerCube();
+        mirror([0,1,0])
+        {
+           CornerCube();
+           mirror([1,0,0]) CornerCube();
+        }
+    }
+}
+
 module Case(servoPins, top)
 {
-    
-    cutheight = boardheight/2;
-    union()
+    cutheight = 0;//boardheight/2;
+
+    module CaseHalf()
     {
         intersection()
         {
@@ -32,66 +74,60 @@ module Case(servoPins, top)
             {
                 difference()
                 {
-                    cube(caseExterior,true);
-                    
-                    {    
-                        translate([0,0,caseInterior[2]/2+0.5])
-                            SPRacingF3Text();
-                        
-                        
-                        scale([1.04,1.04,1.04], auto=true) hull() board(8,false);
-                        
-                        board(servoPins,true);
-                    }
+                    BareCase();
+                    board(servoPins,true);
                 }
-                mountcubeheight = caseInterior[2];
-                
-                difference()
-                {
-            union()
-                       {
-                           cubePos= boardsize/2-2;
-                           translate([cubePos,cubePos,0]) cube([ 6,6,mountcubeheight], true);
-                           translate([cubePos,-cubePos,0]) cube([ 6,6,mountcubeheight], true);
-                           translate([-cubePos,cubePos,0]) cube([ 6,6,mountcubeheight], true);
-                           translate([-cubePos,-cubePos,0]) cube([ 6,6,mountcubeheight], true);
-                       }
-                    
-                        board(servoPins,true);
-                }
+                CornerMountCubes(top);
             }
-            topHalf = [caseExterior[0],caseExterior[1],(caseExterior[2] / 2)];
+                       
+            CaseHalfBox(cutheight, top);
+        }
+    }
 
-           // halfOffset = 0;
-           // if(top)
-            //{
-            //    halfOffset = topHalf[2];                
-            //}
-            //translate([0,0,(topHalf[2] / 2)]) cube(topHalf, true);
-            
-            CaseHalf(top);
-            
-        }
-           
-        if(!top)
+    if(top)
+    {
+        difference()
         {
-            CornerHoles([(boardsize-5)/2,2.85], false);
+            CaseHalf();
+            CornerHoles([(boardsize-5)/2,boardheight*2], false);
         }
+    }    
+    else
+    {
+        CaseHalf();
+        CornerHoles([(boardsize-5)/2 , 2.5, boardheight*2], false);
     }
 }
 
-Case(5,true);
-//#board(5,true);
 
-
-module CaseHalf(cutheight, top)
-{
-      
-    subsize = boardsize+3;
-
+module CaseHalfBox(cutheight, top)
+{    
     translate([0,0,cutheight])
-    mirror([0,0,0])
-        translate([-subsize/2,-subsize/2,0])
-          cube([subsize,subsize,10]);
-  
+    if(top)
+    {
+        CaseHalfBox = [caseExterior[0], caseExterior[1], (caseExterior[2]) - cutheight];
+
+        translate([0,0,caseExterior[2]/2]) cube(CaseHalfBox, true);
+    }
+    else
+    {
+       CaseHalfBox = [caseExterior[0], caseExterior[1], (caseExterior[2]) + cutheight];
+
+       translate([0,0,-caseExterior[2]/2]) cube(CaseHalfBox, true);
+    }
 }
+
+
+//board(5,false);
+
+//intersection()
+translate([0,0,5]) Case(5, true);
+/*#board(5,false);
+
+translate([0,0,-20])
+{
+    Case(5, false);
+    #board(5,false);
+}
+
+*/
