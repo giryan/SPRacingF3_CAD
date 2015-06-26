@@ -9,6 +9,8 @@ squareCorner = boardsize-(cornerradius*2);
 connectorColour = [1,0,0,0.7];
 componentHeight = 1.5;
 
+board (5,true);
+
 module board(numServoConnectors, connectors=false)
 {
     //translate([boardsize/2+3,0,0]) square(3,true);
@@ -26,7 +28,7 @@ module board(numServoConnectors, connectors=false)
     if(connectors)
     {
         color(connectorColour)
-            _CornerHoles(mountHole, true);
+            CornerHoles(mountHole, true);
     }
 }
 
@@ -50,6 +52,15 @@ module BareCircuitBoard()
         translate([boardsize/2,boardsize/2])
         CornerHoles([(boardsize-5)/2,3, boardheight]);
     }
+    
+}
+
+module pins()
+{
+    pinData = [
+    ["VBAT", []]
+    ];
+    
     
 }
 
