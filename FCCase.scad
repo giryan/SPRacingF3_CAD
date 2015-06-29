@@ -15,9 +15,9 @@ module SPRacingF3Text()
 }
 
 
-casethickness = 3;
+casethickness = 1;
 caseSize = boardsize + 0.5;
-caseInterior = [caseSize, caseSize, 8];
+caseInterior = [caseSize, caseSize, 9];
 caseExterior = caseInterior+[casethickness,casethickness,casethickness];
 
 
@@ -41,7 +41,7 @@ module CornerMountCubes(top)
     module CornerCube()
     {
         cubePos = boardsize/2-2;
-        mountcubeheight = caseInterior[2]/2;
+        mountcubeheight = caseInterior[2]/2-boardheight/2;
         translate([cubePos,cubePos,mountcubeheight/2]) cube([ 6,6, mountcubeheight], true);
     }
     cubetrans = top ?
@@ -62,9 +62,8 @@ module CornerMountCubes(top)
     }
 }
 
-module Case(servoPins, pins, top)
+module Case(servoPins, pins, cutheight, top)
 {
-    cutheight = 0;//boardheight/2;
 
     module CaseHalf()
     {
@@ -120,8 +119,9 @@ module CaseHalfBox(cutheight, top)
 
 //board(5,false);
 
+cutheight = boardheight/4+0.2;
 //intersection()
-translate([0,0,5]) Case(5, ["VBAT", "BUZZER"], true);
+translate([0,0,5]) Case(5, ["VBAT", "BUZZER"], cutheight, true);
 /*#board(5,false);
 
 translate([0,0,-20])

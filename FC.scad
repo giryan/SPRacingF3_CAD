@@ -51,30 +51,41 @@ pinSpacing = 2.54;
 pinBorder = [0.2,0.2];
 function PinSize(dim) = pinBorder + dim*pinSpacing;
 
-module Pins(pinsToRender)
+module Pins(pinsToRender, vertical)
 {
     pos = pinsToRender[0];
     size = PinSize(pinsToRender[1]);
-    translate([(boardsize+pos[0])%boardsize,(boardsize+pos[1])%boardsize,0]) 
-    cube([size[0], size[1], 10]);
+    if(vertical)
+    {
+        translate([(boardsize+pos[0])%boardsize,(boardsize+pos[1])%boardsize,0]) 
+            cube([size[0], 10, size[1]+3]);
+    }
+    else
+    {
+        translate([(boardsize+pos[0])%boardsize,(boardsize+pos[1])%boardsize,0]) 
+            cube([size[0], size[1], 10]);
+    }
 }
 
 
-module pins(pinNames)
-{
-    if(len(pinNames))
-    {
-        pinData = [
+board (5,true, ["VBAT", "BUZZER"]);
+
+
+pinData = [
         ["VBAT", [[23.45,0.5], [2,1]]],
         ["BUZZER", [[23.45,-0.5-pinSpacing], [2,1]]]
         ];
-        
+
+
+module pins(pinNames, vertical=true)
+{
+    if(len(pinNames))
+    {        
         find = search(pinNames, pinData);
-        echo (find);
         for(pinIndex = find)
         {
             echo (pinData[pinIndex][0]);
-            Pins(pinData[pinIndex][1]);
+            Pins(pinData[pinIndex][1], vertical);
         }
     }
 }
@@ -207,11 +218,16 @@ module MicroUSB(pos=[0,0,0], connectors)
 {
     translate(pos)
     {
-        socketSize = [9,6.3,3];
-        socketPos = [4.5,1.3,0];
+        socketSize = [9,6.5,3];
+        socketPos = [4.5,1.5,0];
         connectorSize = [11,17,7];
         
-        socketAndConnector(socketSize,socketPos,connectorSize, connectors);
+        socketAndConnector(socketSize,socketPos,connectorSize, !connectors);
+        if(connectors)
+        {
+            color(connectorColour)
+           translate(-[socketPos[0],socketPos[1],boardheight/2]) cube([socketSize[0], socketPos[1], boardheight/2]);
+        }
     }
 }
 
