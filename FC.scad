@@ -9,26 +9,26 @@ squareCorner = boardsize-(cornerradius*2);
 connectorColour = [1,0,0,0.7];
 componentHeight = 1.5;
 
-board (5,true);
+//board (5,true, []);
 
-module board(numServoConnectors, connectors=false)
+module board(numServoConnectors, connectors=false, pinNames=[])
 {
     //translate([boardsize/2+3,0,0]) square(3,true);
-    translate([-boardsize/2,-boardsize/2])
+        BareCircuitBoard();
     {
         //color("DimGrey") 
-        BareCircuitBoard();
         TopComponents(connectors, numServoConnectors);
         BottomComponents(connectors);
     }
     if(connectors)
     {
         ServoConnectors(numServoConnectors, false, 3);
-    }
-    if(connectors)
-    {
         color(connectorColour)
-            CornerHoles(mountHole, true);
+            CornerHoles([(boardsize-5)/2,3, boardheight*2], true);
+    
+        color(connectorColour)
+            translate([-boardsize/2,-boardsize/2])
+                pins(pinNames);
     }
 }
 
@@ -37,74 +37,44 @@ module BareCircuitBoard()
 {
     difference()
     {
-        translate([0,0,-boardheight/2])
+        minkowski()
         {
-                
-            translate([cornerradius,cornerradius])
-            {
-                minkowski()
-                {
-                    cylinder(r=cornerradius,h=boardheight/2);
-                    cube([squareCorner,squareCorner,boardheight/2]);
-                }
-            }
+            translate([0,0,-boardheight/4]) cylinder(r=cornerradius,h=boardheight/2);
+            cube([squareCorner,squareCorner,boardheight/2], true);
         }
-        translate([boardsize/2,boardsize/2])
         CornerHoles([(boardsize-5)/2,3, boardheight]);
     }
     
 }
 
-module pins()
+pinSpacing = 2.54;
+pinBorder = [0.2,0.2];
+function PinSize(dim) = pinBorder + dim*pinSpacing;
+
+module Pins(pinsToRender)
 {
-    pinData = [
-    ["VBAT", []]
-    ];
-    
-    
+    pos = pinsToRender[0];
+    size = PinSize(pinsToRender[1]);
+    translate([(boardsize+pos[0])%boardsize,(boardsize+pos[1])%boardsize,0]) 
+    cube([size[0], size[1], 10]);
 }
 
-module TopComponents (connectors, numServoConnectors, verticalServo)
+
+module pins(pinNames)
 {
-    translate([0,0,boardheight/2])
+    if(len(pinNames))
     {
-        JSTSH(8, [11.4,0,0], connectors);
-        translate([0,boardsize,0]) mirror([0,1,0]) JSTSH(8, [11.4,0,0], connectors);
-        rotate([0,0,270]) translate([-boardsize/2,0,0])
+        pinData = [
+        ["VBAT", [[23.45,0.5], [2,1]]],
+        ["BUZZER", [[23.45,-0.5-pinSpacing], [2,1]]]
+        ];
+        
+        find = search(pinNames, pinData);
+        echo (find);
+        for(pinIndex = find)
         {
-            MicroUSB([0,0,0], connectors);
-            JSTSH(4, [5.2,0,0], connectors);
-            mirror([1,0,0]) JSTSH(4, [5.2,0,0], connectors);
-        }
-        color("Silver")
-        {
-            translate([10.7,7.3,0])
-                cube([14.6,21,componentHeight]);
-            translate([7.3,13.4,0])
-                cube([3.4, 8.9 ,componentHeight]);
-        }
-    }
-}
-module BottomComponents (connectors)
-{
-    translate([0,0,-boardheight/2])
-    mirror([0,0,-1])
-    {
-        rotate([0,0,270]) translate([-boardsize/2,0,0])
-        {
-            JSTSH(4, [5.2,0,0], connectors);
-            mirror([1,0,0]) JSTSH(4, [5.2,0,0], connectors);
-        }
-        color("Silver")
-        {
-            translate([9.3,4.5,0])
-                cube([17, boardsize-9 ,componentHeight]);
-            translate([13.8,0,0])
-            {
-                cube([5.4, 4.5 ,componentHeight]);
-                translate([0,boardsize-4.5,0])
-                    cube([5.4, 4.5 ,componentHeight]);
-            }
+            echo (pinData[pinIndex][0]);
+            Pins(pinData[pinIndex][1]);
         }
     }
 }
@@ -113,7 +83,7 @@ module ServoConnectors(numPins, vertical, pinRows)
 {
     color(connectorColour)
     {
-        servoConnectorWidth = 8*2.54;
+        servoConnectorWidth = 8*2.54+0.2;
         servoConnectorDepth = 0.4+3*2.54;
 
         pinCube = [10, numPins*2.54, 0.4+pinRows*2.54];
@@ -127,6 +97,57 @@ module ServoConnectors(numPins, vertical, pinRows)
                     cube(pinCube);
     }
 }
+module TopComponents (connectors, numServoConnectors, verticalServo)
+{
+    translate([-boardsize/2,-boardsize/2])
+    {
+        translate([0,0,boardheight/2])
+        {
+            JSTSH(8, [11.4,0,0], connectors);
+            translate([0,boardsize,0]) mirror([0,1,0]) JSTSH(8, [11.4,0,0], connectors);
+            rotate([0,0,270]) translate([-boardsize/2,0,0])
+            {
+                MicroUSB([0,0,0], connectors);
+                JSTSH(4, [5.2,0,0], connectors);
+                mirror([1,0,0]) JSTSH(4, [5.2,0,0], connectors);
+            }
+            color("Silver")
+            {
+                translate([10.7,7.3,0])
+                    cube([14.6,21,componentHeight]);
+                translate([7.3,13.4,0])
+                    cube([3.4, 8.9 ,componentHeight]);
+            }
+        }
+    }
+}
+module BottomComponents (connectors)
+{
+    translate([-boardsize/2,-boardsize/2])
+    {
+        translate([0,0,-boardheight/2])
+        mirror([0,0,-1])
+        {
+            rotate([0,0,270]) translate([-boardsize/2,0,0])
+            {
+                JSTSH(4, [5.2,0,0], connectors);
+                mirror([1,0,0]) JSTSH(4, [5.2,0,0], connectors);
+            }
+            color("Silver")
+            {
+                translate([9.3,4.5,0])
+                    cube([17, boardsize-9 ,componentHeight]);
+                translate([13.8,0,0])
+                {
+                    cube([5.4, 4.5 ,componentHeight]);
+                    translate([0,boardsize-4.5,0])
+                        cube([5.4, 4.5 ,componentHeight]);
+                }
+            }
+        }
+    }
+}
+
 
 module CornerHoles(mountHole_)
 {

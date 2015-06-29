@@ -62,7 +62,7 @@ module CornerMountCubes(top)
     }
 }
 
-module Case(servoPins, top)
+module Case(servoPins, pins, top)
 {
     cutheight = 0;//boardheight/2;
 
@@ -75,7 +75,7 @@ module Case(servoPins, top)
                 difference()
                 {
                     BareCase();
-                    board(servoPins,true);
+                    board(servoPins, true, pins);
                 }
                 CornerMountCubes(top);
             }
@@ -121,7 +121,7 @@ module CaseHalfBox(cutheight, top)
 //board(5,false);
 
 //intersection()
-translate([0,0,5]) Case(5, true);
+translate([0,0,5]) Case(5, ["VBAT", "BUZZER"], true);
 /*#board(5,false);
 
 translate([0,0,-20])
