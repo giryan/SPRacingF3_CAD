@@ -119,9 +119,9 @@ module CaseHalfBox(cutheight, top)
 
 //board(5,false);
 
-cutheight = boardheight/4+0.2;
+cutheight = boardheight/2;
 //intersection()
-translate([0,0,5]) Case(5, ["VBAT", "BUZZER"], cutheight, true);
+translate([0,0,5]) Case(5, ["VBAT", "BUZZER"], cutheight, false);
 /*#board(5,false);
 
 translate([0,0,-20])

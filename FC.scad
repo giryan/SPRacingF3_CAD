@@ -68,7 +68,7 @@ module Pins(pinsToRender, vertical)
 }
 
 
-board (5,true, ["VBAT", "BUZZER"]);
+//board (5,true, ["VBAT", "BUZZER"]);
 
 
 pinData = [
