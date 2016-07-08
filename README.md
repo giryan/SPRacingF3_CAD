@@ -1,4 +1,4 @@
-# SPRacingF3_CAD
+# SPRacingF3 CAD
 Seriously Pro Racing F3 CAD model(s)
 
 first attempts at using OpenSCAD.
